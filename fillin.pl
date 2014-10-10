@@ -69,10 +69,15 @@ valid_puzzle([Row|Rows]) :-
 % as result.  You'll need to replace this with a working
 % implementation.
 
-solve_puzzle(Puzzle, _, Puzzle).
+solve_puzzle(Puzzle, _, Puzzle) :-
+    puzzle_to_slots(Puzzle, Slots).
 
 puzzle_to_slots(Puzzle, Slots) :-
-    replace_empty_puzzle(Puzzle, PuzzleWithVar).
+    replace_empty_puzzle(Puzzle, PuzzleWithVar),
+    rows_to_slots(PuzzleWithVar, RowSlots),
+    transpose(PuzzleWithVar, VPuzzleWithVar),
+    rows_to_slots(VPuzzleWithVar, VerticleSlots),
+    append(RowSlots, VerticleSlots, Slots).
 
 rows_to_slots([], []).
 rows_to_slots([E|Es], Slots) :-
@@ -80,12 +85,12 @@ rows_to_slots([E|Es], Slots) :-
     rows_to_slots(Es, NewSlots),
     append(RowSlots, NewSlots, Slots).
 
-replace_empty_puzzle(Puzzle, PuzzleWthVar) :-
-    map(row_to_lgc_var, Puzzle, PuzzleWthVar).
+replace_empty_puzzle(Puzzle, PuzzleWithVar) :-
+    map(row_to_lgc_var, Puzzle, PuzzleWithVar).
 
 row_to_lgc_var([], []).
 row_to_lgc_var([E|Es], NewRow) :-
-    (   char_code('_', E)
+    (   E = '_'
     ->  NewRow = [_|NewRow1]
     ;   NewRow = [E|NewRow1]
     ),
