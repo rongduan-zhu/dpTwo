@@ -69,7 +69,16 @@ valid_puzzle([Row|Rows]) :-
 % as result.  You'll need to replace this with a working
 % implementation.
 
-solve_puzzle(Puzzle, WordList, Puzzle).
+solve_puzzle(Puzzle, _, Puzzle).
+
+puzzle_to_slots(Puzzle, Slots) :-
+    replace_empty_puzzle(Puzzle, PuzzleWithVar).
+
+rows_to_slots([], []).
+rows_to_slots([E|Es], Slots) :-
+    get_slots_for_row(E, RowSlots),
+    rows_to_slots(Es, NewSlots),
+    append(RowSlots, NewSlots, Slots).
 
 replace_empty_puzzle(Puzzle, PuzzleWthVar) :-
     map(row_to_lgc_var, Puzzle, PuzzleWthVar).
@@ -82,17 +91,41 @@ row_to_lgc_var([E|Es], NewRow) :-
     ),
     row_to_lgc_var(Es, NewRow1).
 
-get_slots([], A, [A]).
-get_slots([E|Es], A, F) :-
-    (   E \= '#'
-        ->  A1 = [E|A]
-        ;   F = [A|F1],
+get_slots_for_row(Row, Slots) :-
+    get_slots_concrete(Row, [], SlotsReversed),
+    map(rev, SlotsReversed, Slots).
+
+/*
+ NOTE: Could use filter to filter out all lists whose length are less than
+ one
+ NOTE2: This is reversed, please reverse it
+*/
+get_slots_concrete([], A, F) :-
+    (   length(A, X), X > 1
+        ->  F = [A]
+        ;   F = []
+    ).
+get_slots_concrete([E|Es], A, F) :-
+    (   var(E)
+        ->  A1 = [E|A],
+            F = F1
+        ;   length(A, X), X > 1
+        ->  F = [A|F1],
+            A1 = []
+        ;   F = F1,
             A1 = []
     ),
-    get_slots(Es, A1, F1).
+    get_slots_concrete(Es, A1, F1).
 
 %% Helper functions
 map(_, [], []).
 map(Pred, [X|Xs], [Y|Ys]) :-
     call(Pred, X, Y),
     map(Pred, Xs, Ys).
+
+rev(Lst, Rev) :-
+    revacc(Lst, [], Rev).
+
+revacc([], A, A).
+revacc([X|Xs], A, R) :-
+    revacc(Xs, [X|A], R).
