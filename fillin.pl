@@ -69,11 +69,26 @@ valid_puzzle([Row|Rows]) :-
 % as result.  You'll need to replace this with a working
 % implementation.
 
-solve_puzzle(Puzzle, _, Puzzle) :-
-    puzzle_to_slots(Puzzle, Slots).
+solve_puzzle(Puzzle, Wordlist, PuzzleSolution) :-
+    puzzle_to_vars(Puzzle, PuzzleWithVar),
+    solve_varpuzzle(PuzzleWithVar, Wordlist, PuzzleSolution).
 
-puzzle_to_slots(Puzzle, Slots) :-
-    replace_empty_puzzle(Puzzle, PuzzleWithVar),
+solve_varpuzzle(PuzzleWithVar, [], PuzzleWithVar).
+solve_varpuzzle(PuzzleWithVar, Wordlist, PuzzleWithVar) :-
+    puzzle_to_slots(PuzzleWithVar, Slots),
+    possible_words(Slots, Wordlist, PossibleSolution),
+    zip(Slots, PossibleSolution, SlotSolution),
+    head(SlotSolution, Head),
+    find_min_slot(SlotSolution, Head, MinSlot-MinSlotSol),
+    try_solution(MinSlot, MinSlotSol, Wordlist, NewWordlist),
+    print(PuzzleWithVar),
+    solve_varpuzzle(PuzzleWithVar, NewWordlist, PuzzleWithVar).
+
+%% Setting up
+puzzle_to_vars(Puzzle, PuzzleWithVar) :-
+    replace_empty_puzzle(Puzzle, PuzzleWithVar).
+
+puzzle_to_slots(PuzzleWithVar, Slots) :-
     rows_to_slots(PuzzleWithVar, RowSlots),
     transpose(PuzzleWithVar, VPuzzleWithVar),
     rows_to_slots(VPuzzleWithVar, VerticleSlots),
@@ -114,6 +129,9 @@ get_slots_concrete([E|Es], A, F) :-
     (   var(E)
         ->  A1 = [E|A],
             F = F1
+        ;   E \= '#'
+        ->  A1 = [E|A],
+            F = F1
         ;   length(A, X), X > 1
         ->  F = [A|F1],
             A1 = []
@@ -121,6 +139,31 @@ get_slots_concrete([E|Es], A, F) :-
             A1 = []
     ),
     get_slots_concrete(Es, A1, F1).
+
+%% Solve functions
+possible_words([], _, []).
+possible_words([E|Es], Wordlist, [PossibleSolution|SlotWords]) :-
+    filter(unifiable(E), Wordlist, PossibleSolution),
+    possible_words(Es, Wordlist, SlotWords).
+
+unifiable(A, B) :- \+ (B \= A).
+
+find_min_slot([], Min, Min).
+find_min_slot([Slot-Solutions|Ss], MSlot-MSol, Min) :-
+    length(Solutions, SolLen),
+    length(MSol, MinSolLen),
+    (   SolLen < 2
+        ->  find_min_slot(Ss, MSlot-MSol, Min)
+        ;   SolLen < MinSolLen
+        ->  find_min_slot(Ss, Slot-Solutions, Min)
+        ;   find_min_slot(Ss, MSlot-MSol, Min)
+    ).
+
+try_solution(Slot, [S|_], Wordlist, NewWordlist) :-
+    Slot = S,
+    delete(Wordlist, S, NewWordlist).
+try_solution(Slot, [_|Solutions], Wordlist, NewWordlist) :-
+    try_solution(Slot, Solutions, Wordlist, NewWordlist).
 
 %% Helper functions
 map(_, [], []).
@@ -134,3 +177,32 @@ rev(Lst, Rev) :-
 revacc([], A, A).
 revacc([X|Xs], A, R) :-
     revacc(Xs, [X|A], R).
+
+filter(_, [], []).
+filter(Pred, [E|Es], Flist) :-
+    (   call(Pred, E)
+        ->  Flist = [E|Flist1]
+        ;   Flist = Flist1
+    ),
+    filter(Pred, Es, Flist1).
+
+zip([], [], []).
+zip([A | As], [B | Bs], [A-B | ABs]) :-
+    samelength3(As, Bs, ABs),
+    zip(As, Bs, ABs).
+
+%% samelength/3
+%% calculates if three lists are of the same length
+samelength3([], [], []).
+samelength3([_ | Xs], [_ | Ys], [_ | Zs]) :-
+    samelength3(Xs, Ys, Zs).
+
+pair_min(A1-A2, B1-B2, Min) :-
+    (   A2 < B2
+        ->  Min = (A1-A2)
+        ;   Min = (B1-B2)
+    ).
+
+head([Head|_], Head).
+
+not_empty([_|_]).
