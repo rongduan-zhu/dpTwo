@@ -77,11 +77,11 @@ solve_varpuzzle(PuzzleWithVar, [], PuzzleWithVar).
 solve_varpuzzle(PuzzleWithVar, Wordlist, PuzzleWithVar) :-
     puzzle_to_slots(PuzzleWithVar, Slots),
     possible_words(Slots, Wordlist, PossibleSolution),
-    zip(Slots, PossibleSolution, SlotSolution),
+    zip(Slots, PossibleSolution, AllSlotSolutions),
+    filter(has_solutions, AllSlotSolutions, SlotSolution),
     head(SlotSolution, Head),
     find_min_slot(SlotSolution, Head, MinSlot-MinSlotSol),
     try_solution(MinSlot, MinSlotSol, Wordlist, NewWordlist),
-    print(PuzzleWithVar),
     solve_varpuzzle(PuzzleWithVar, NewWordlist, PuzzleWithVar).
 
 %% Setting up
@@ -152,9 +152,7 @@ find_min_slot([], Min, Min).
 find_min_slot([Slot-Solutions|Ss], MSlot-MSol, Min) :-
     length(Solutions, SolLen),
     length(MSol, MinSolLen),
-    (   SolLen < 2
-        ->  find_min_slot(Ss, MSlot-MSol, Min)
-        ;   SolLen < MinSolLen
+    (   SolLen < MinSolLen
         ->  find_min_slot(Ss, Slot-Solutions, Min)
         ;   find_min_slot(Ss, MSlot-MSol, Min)
     ).
@@ -164,6 +162,8 @@ try_solution(Slot, [S|_], Wordlist, NewWordlist) :-
     delete(Wordlist, S, NewWordlist).
 try_solution(Slot, [_|Solutions], Wordlist, NewWordlist) :-
     try_solution(Slot, Solutions, Wordlist, NewWordlist).
+
+has_solutions(_-[_|_]).
 
 %% Helper functions
 map(_, [], []).
