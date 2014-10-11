@@ -69,20 +69,20 @@ valid_puzzle([Row|Rows]) :-
 % as result.  You'll need to replace this with a working
 % implementation.
 
-solve_puzzle(Puzzle, Wordlist, PuzzleSolution) :-
+solve_puzzle(Puzzle, Wordlist, PuzzleWithVar) :-
     puzzle_to_vars(Puzzle, PuzzleWithVar),
-    solve_varpuzzle(PuzzleWithVar, Wordlist, PuzzleSolution).
-
-solve_varpuzzle(PuzzleWithVar, [], PuzzleWithVar).
-solve_varpuzzle(PuzzleWithVar, Wordlist, PuzzleWithVar) :-
     puzzle_to_slots(PuzzleWithVar, Slots),
+    solve_varpuzzle(Slots, Wordlist).
+
+solve_varpuzzle(_, []).
+solve_varpuzzle(Slots, Wordlist) :-
     possible_words(Slots, Wordlist, PossibleSolution),
     zip(Slots, PossibleSolution, AllSlotSolutions),
     filter(has_solutions, AllSlotSolutions, SlotSolution),
     head(SlotSolution, Head),
     find_min_slot(SlotSolution, Head, MinSlot-MinSlotSol),
     try_solution(MinSlot, MinSlotSol, Wordlist, NewWordlist),
-    solve_varpuzzle(PuzzleWithVar, NewWordlist, PuzzleWithVar).
+    solve_varpuzzle(Slots, NewWordlist).
 
 %% Setting up
 puzzle_to_vars(Puzzle, PuzzleWithVar) :-
@@ -152,7 +152,9 @@ find_min_slot([], Min, Min).
 find_min_slot([Slot-Solutions|Ss], MSlot-MSol, Min) :-
     length(Solutions, SolLen),
     length(MSol, MinSolLen),
-    (   SolLen < MinSolLen
+    (   SolLen =:= 1
+        ->  find_min_slot([], Slot-Solutions, Min)
+        ;   SolLen < MinSolLen
         ->  find_min_slot(Ss, Slot-Solutions, Min)
         ;   find_min_slot(Ss, MSlot-MSol, Min)
     ).
@@ -188,7 +190,6 @@ filter(Pred, [E|Es], Flist) :-
 
 zip([], [], []).
 zip([A | As], [B | Bs], [A-B | ABs]) :-
-    samelength3(As, Bs, ABs),
     zip(As, Bs, ABs).
 
 %% samelength/3
