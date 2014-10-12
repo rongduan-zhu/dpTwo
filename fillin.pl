@@ -77,9 +77,7 @@ solve_puzzle(Puzzle, Wordlist, PuzzleWithVar) :-
 solve_varpuzzle(_, []).
 solve_varpuzzle(Slots, Wordlist) :-
     possible_words(Slots, Wordlist, PossibleSolution),
-    map(length, PossibleSolution, PSLen),
     zip(Slots, PossibleSolution, SlotSolution),
-    % filter(has_solutions, AllSlotSolutions, SlotSolution),
     head(SlotSolution, Head),
     find_min_slot(SlotSolution, Head, MinSlot-MinSlotSol),
     try_solution(MinSlot, MinSlotSol, Wordlist, NewWordlist),
