@@ -77,8 +77,9 @@ solve_puzzle(Puzzle, Wordlist, PuzzleWithVar) :-
 solve_varpuzzle(_, []).
 solve_varpuzzle(Slots, Wordlist) :-
     possible_words(Slots, Wordlist, PossibleSolution),
-    zip(Slots, PossibleSolution, AllSlotSolutions),
-    filter(has_solutions, AllSlotSolutions, SlotSolution),
+    map(length, PossibleSolution, PSLen),
+    zip(Slots, PossibleSolution, SlotSolution),
+    % filter(has_solutions, AllSlotSolutions, SlotSolution),
     head(SlotSolution, Head),
     find_min_slot(SlotSolution, Head, MinSlot-MinSlotSol),
     try_solution(MinSlot, MinSlotSol, Wordlist, NewWordlist),
@@ -152,7 +153,10 @@ find_min_slot([], Min, Min).
 find_min_slot([Slot-Solutions|Ss], MSlot-MSol, Min) :-
     length(Solutions, SolLen),
     length(MSol, MinSolLen),
-    (   SolLen =:= 1
+    (   SolLen =:= 0
+        ->  is_unified(Slot),
+            find_min_slot(Ss, MSlot-MSol, Min)
+        ;   SolLen =:= 1
         ->  find_min_slot([], Slot-Solutions, Min)
         ;   SolLen < MinSolLen
         ->  find_min_slot(Ss, Slot-Solutions, Min)
@@ -166,6 +170,11 @@ try_solution(Slot, [_|Solutions], Wordlist, NewWordlist) :-
     try_solution(Slot, Solutions, Wordlist, NewWordlist).
 
 has_solutions(_-[_|_]).
+
+is_unified([]).
+is_unified([E|Es]) :-
+    \+ var(E),
+    is_unified(Es).
 
 %% Helper functions
 map(_, [], []).
