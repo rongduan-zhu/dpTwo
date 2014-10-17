@@ -1,4 +1,3 @@
-#!/usr/bin/env swipl
 % You can use this code to get your started with your fillin puzzle solver.
 
 :- ensure_loaded(library(clpfd)).
@@ -85,7 +84,7 @@ solve_varpuzzle(Slots, Wordlist) :-
 
 %% Setting up
 puzzle_to_vars(Puzzle, PuzzleWithVar) :-
-    replace_empty_puzzle(Puzzle, PuzzleWithVar).
+    map(row_to_lgc_var, Puzzle, PuzzleWithVar).
 
 puzzle_to_slots(PuzzleWithVar, Slots) :-
     rows_to_slots(PuzzleWithVar, RowSlots),
@@ -94,13 +93,10 @@ puzzle_to_slots(PuzzleWithVar, Slots) :-
     append(RowSlots, VerticleSlots, Slots).
 
 rows_to_slots([], []).
-rows_to_slots([E|Es], Slots) :-
-    get_slots_for_row(E, RowSlots),
-    rows_to_slots(Es, NewSlots),
+rows_to_slots([Row|Rows], Slots) :-
+    get_slots_for_row(Row, RowSlots),
+    rows_to_slots(Rows, NewSlots),
     append(RowSlots, NewSlots, Slots).
-
-replace_empty_puzzle(Puzzle, PuzzleWithVar) :-
-    map(row_to_lgc_var, Puzzle, PuzzleWithVar).
 
 row_to_lgc_var([], []).
 row_to_lgc_var([E|Es], NewRow) :-
@@ -111,7 +107,7 @@ row_to_lgc_var([E|Es], NewRow) :-
     row_to_lgc_var(Es, NewRow1).
 
 get_slots_for_row(Row, Slots) :-
-    get_slots_concrete(Row, [], SlotsReversed),
+    get_slots_for_row(Row, [], SlotsReversed),
     map(rev, SlotsReversed, Slots).
 
 /*
@@ -119,12 +115,12 @@ get_slots_for_row(Row, Slots) :-
  one
  NOTE2: This is reversed, please reverse it
 */
-get_slots_concrete([], A, F) :-
+get_slots_for_row([], A, F) :-
     (   length(A, X), X > 1
         ->  F = [A]
         ;   F = []
     ).
-get_slots_concrete([E|Es], A, F) :-
+get_slots_for_row([E|Es], A, F) :-
     (   var(E)
         ->  A1 = [E|A],
             F = F1
@@ -137,7 +133,7 @@ get_slots_concrete([E|Es], A, F) :-
         ;   F = F1,
             A1 = []
     ),
-    get_slots_concrete(Es, A1, F1).
+    get_slots_for_row(Es, A1, F1).
 
 %% Solve functions
 possible_words([], _, []).
@@ -167,11 +163,9 @@ try_solution(Slot, [S|_], Wordlist, NewWordlist) :-
 try_solution(Slot, [_|Solutions], Wordlist, NewWordlist) :-
     try_solution(Slot, Solutions, Wordlist, NewWordlist).
 
-has_solutions(_-[_|_]).
-
 is_unified([]).
 is_unified([E|Es]) :-
-    \+ var(E),
+    nonvar(E),
     is_unified(Es).
 
 %% Helper functions
@@ -181,11 +175,11 @@ map(Pred, [X|Xs], [Y|Ys]) :-
     map(Pred, Xs, Ys).
 
 rev(Lst, Rev) :-
-    revacc(Lst, [], Rev).
+    rev(Lst, [], Rev).
 
-revacc([], A, A).
-revacc([X|Xs], A, R) :-
-    revacc(Xs, [X|A], R).
+rev([], A, A).
+rev([X|Xs], A, R) :-
+    rev(Xs, [X|A], R).
 
 filter(_, [], []).
 filter(Pred, [E|Es], Flist) :-
@@ -199,18 +193,4 @@ zip([], [], []).
 zip([A | As], [B | Bs], [A-B | ABs]) :-
     zip(As, Bs, ABs).
 
-%% samelength/3
-%% calculates if three lists are of the same length
-samelength3([], [], []).
-samelength3([_ | Xs], [_ | Ys], [_ | Zs]) :-
-    samelength3(Xs, Ys, Zs).
-
-pair_min(A1-A2, B1-B2, Min) :-
-    (   A2 < B2
-        ->  Min = (A1-A2)
-        ;   Min = (B1-B2)
-    ).
-
 head([Head|_], Head).
-
-not_empty([_|_]).
