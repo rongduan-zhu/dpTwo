@@ -235,9 +235,8 @@ get_slots_for_row([], SlotsAcc, SlotsAcc).
 get_slots_for_row(Chars, SlotsAcc, Slots) :-
     get_slot(Chars, Slot, CharsLeft),
     append_slot(Slot, SlotsAcc, NewSlots),
-    get_slots_for_row(CharsLeft, NewSlots, Slots).
+    get_slots_for_row(CharsLeft, NewSlots, Slots), !.
 
-get_slot([], [], []).
 get_slot([Char|Chars], Slot, CharsLeft) :-
     (   var(Char)
         ->  Slot = [Char|Tail],
@@ -248,6 +247,7 @@ get_slot([Char|Chars], Slot, CharsLeft) :-
         ;   Slot = [],
             CharsLeft = Chars
     ).
+get_slot([], [], []).
 
 append_slot(Slot, Slots, NewSlots) :-
     (   length(Slot, Len), Len > 1
