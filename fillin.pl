@@ -1,6 +1,32 @@
-% You can use this code to get your started with your fillin puzzle solver.
+/*
+    File:       fillin.pl
+    Author:     Rongduan Zhu
+    Purpose:    A program which fills in a crossword puzzle given the list of
+                words.
+ */
 
-%Loading clpfd ensures we are using the right transpose predicate
+% Game Description
+% We are given a crossword puzzle and the list of words which can fit into
+% the puzzle. Our goal is to fill the puzzle with the list of words.
+
+% Strategy
+% The strategy I used follow the hints provided in the project specification.
+% First, I replace all of the _ (underscores) in the puzzle with logical
+% variables. Then I get all the slots by first getting all the slots for
+% all the rows by splitting on # (hash), then I transpose the puzzle such that
+% the columns become rows, I then use the same method to get the slots for
+% the transposed puzzle's rows.
+% (1) Then for each slot, I find the corresponding words in the word list
+% such that they will fit into the slot (unifiable). I then get the slot which
+% has the smallest number of unifiable words. I then (2) unify every word for
+% that slot with the slot, and after unifying a word I repeat (1) as the
+% possible words that will fit for that each slot would have changed. If there
+% exists a slot during (1) which is not unified and has no possible solution,
+% then I go back to (2) which is a choicepoint made by Prolog and try the
+% next word. I stop when the word list is empty, as it implies that all the
+% words have been unified with a slot.
+
+% Loading clpfd ensures we are using the right transpose predicate
 :- ensure_loaded(library(clpfd)).
 
 
