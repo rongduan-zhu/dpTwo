@@ -224,40 +224,36 @@ row_to_logical_var([Char|Chars], NewRow) :-
 % order
 get_slots_for_row(Row, Slots) :-
     % Get all the slots by splitting on #, but the elements are reversed
-    get_slots_for_row(Row, [], SlotsReversed),
-    % Reverse elements in all of the slots to get the right order
-    map(reverse, SlotsReversed, Slots).
+    get_slots_for_row(Row, [], Slots).
 
 
 %% get_slots_for_row(Row, Slot, Slots)
 % Find all the slots for Row. For each character, it first checks if it is a
 % variable, if it succeeds, then it appends the current character to the
 % front of the slot and use the current slot
-/*
- NOTE: Could use filter to filter out all lists whose length are less than
- one
- NOTE2: This is reversed, please reverse it
-*/
-get_slots_for_row([], Slot, Slots) :-
-    (   length(Slot, X), X > 1
-        ->  Slots = [Slot]
-        ;   Slots = []
-    ).
-get_slots_for_row([Char|Chars], Slot, Slots) :-
-    (   var(Char)
-        ->  NewSlot = [Char|Slot],
-            Slots = CurrentSlots
-        ;   Char \= '#'
-        ->  NewSlot = [Char|Slot],
-            Slots = CurrentSlots
-        ;   length(Slot, Len), Len > 1
-        ->  Slots = [Slot|CurrentSlots],
-            NewSlot = []
-        ;   Slots = CurrentSlots,
-            NewSlot = []
-    ),
-    get_slots_for_row(Chars, NewSlot, CurrentSlots).
+get_slots_for_row([], SlotsAcc, SlotsAcc).
+get_slots_for_row(Chars, SlotsAcc, Slots) :-
+    get_slot(Chars, Slot, CharsLeft),
+    append_slot(Slot, SlotsAcc, NewSlots),
+    get_slots_for_row(CharsLeft, NewSlots, Slots).
 
+get_slot([], [], []).
+get_slot([Char|Chars], Slot, CharsLeft) :-
+    (   var(Char)
+        ->  Slot = [Char|Tail],
+            get_slot(Chars, Tail, CharsLeft)
+        ;   Char \= '#'
+        ->  Slot = [Char|Tail],
+            get_slot(Chars, Tail, CharsLeft)
+        ;   Slot = [],
+            CharsLeft = Chars
+    ).
+
+append_slot(Slot, Slots, NewSlots) :-
+    (   length(Slot, Len), Len > 1
+        ->  NewSlots = [Slot|Slots]
+        ;   NewSlots = Slots
+    ).
 
 %% possible_words(Slots, Wordlist, PossibleWords)
 % For each slot, find the corresponding words in Wordlist that can be unified
