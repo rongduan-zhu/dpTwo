@@ -218,28 +218,42 @@ row_to_logical_var([Char|Chars], NewRow) :-
 
 
 %% get_slots_for_row(Row, Slots)
-% Find all the slots in Row. Do this by splitting on #. For all the
-% slots found, the elements in the slots are reversed in order, so
-% after the slots are found, the elements are reversed again to get the right
-% order
+% Find all the slots in Row. Do this by splitting on #. The Slots list
+% returned in first step is reversed, so we reverse the slots list and return
+% the correctly ordered list of Slots
 get_slots_for_row(Row, Slots) :-
-    % Get all the slots by splitting on #, but the elements are reversed
+    % Get all the slots by splitting on #, but the order of the slots are
+    % reversed
     get_slots_for_row(Row, [], ReversedSlots),
+    % Reverse the reversed slots list
     reverse(ReversedSlots, Slots).
 
 
 %% get_slots_for_row(Row, Slot, Slots)
-% Find all the slots for Row. For each character, it first checks if it is a
-% variable, if it succeeds, then it appends the current character to the
-% front of the slot and use the current slot
+% Find all the slots for Row. Do this by first traversing the row, stop until
+% a character is found, append slot constructed so far to Slots, and
+% recursively apply the same strategy until there is no characters in the row
+% left. Basically splitting the row on # characters.
 get_slots_for_row(Chars, SlotsAcc, Slots) :-
     (   Chars \= []
-        ->  get_slot(Chars, Slot, CharsLeft),
+        ->  % As long as there is still characters, get all characters until
+            % hitting a # character.
+            get_slot(Chars, Slot, CharsLeft),
+            % Append the list of characters not including the # to
+            % the list of slots.
             append_slot(Slot, SlotsAcc, NewSlots),
+            % Recursively apply the same strategy.
             get_slots_for_row(CharsLeft, NewSlots, Slots)
         ;   Slots = SlotsAcc
     ).
 
+
+%% get_slot(Chars, Slot, CharsLeft)
+% Return all characters from Chars from left to right until a # character is
+% found. The returned list of characters does not contain the # character.
+% If the character is not bound or if the character is bound but not bounded
+% to #, then append that character to the tail of list. Otherwise stop and
+% return the list of characters found so far.
 get_slot([Char|Chars], Slot, CharsLeft) :-
     (   var(Char)
         ->  Slot = [Char|Tail],
@@ -252,6 +266,11 @@ get_slot([Char|Chars], Slot, CharsLeft) :-
     ).
 get_slot([], [], []).
 
+
+%% append_slot(Slot, Slots, NewSlots)
+% Only append Slot to Slots if the length of Slot is greater than 1. Doing
+% this because a Slot with 1 character or less is not a valid slot according
+% to project specification
 append_slot(Slot, Slots, NewSlots) :-
     (   length(Slot, Len), Len > 1
         ->  NewSlots = [Slot|Slots]
