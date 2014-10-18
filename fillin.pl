@@ -224,7 +224,8 @@ row_to_logical_var([Char|Chars], NewRow) :-
 % order
 get_slots_for_row(Row, Slots) :-
     % Get all the slots by splitting on #, but the elements are reversed
-    get_slots_for_row(Row, [], Slots).
+    get_slots_for_row(Row, [], ReversedSlots),
+    reverse(ReversedSlots, Slots).
 
 
 %% get_slots_for_row(Row, Slot, Slots)
