@@ -231,11 +231,13 @@ get_slots_for_row(Row, Slots) :-
 % Find all the slots for Row. For each character, it first checks if it is a
 % variable, if it succeeds, then it appends the current character to the
 % front of the slot and use the current slot
-get_slots_for_row([], SlotsAcc, SlotsAcc).
 get_slots_for_row(Chars, SlotsAcc, Slots) :-
-    get_slot(Chars, Slot, CharsLeft),
-    append_slot(Slot, SlotsAcc, NewSlots),
-    get_slots_for_row(CharsLeft, NewSlots, Slots), !.
+    (   Chars \= []
+        ->  get_slot(Chars, Slot, CharsLeft),
+            append_slot(Slot, SlotsAcc, NewSlots),
+            get_slots_for_row(CharsLeft, NewSlots, Slots)
+        ;   Slots = SlotsAcc
+    ).
 
 get_slot([Char|Chars], Slot, CharsLeft) :-
     (   var(Char)
