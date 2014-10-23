@@ -130,6 +130,8 @@ valid_puzzle([Row|Rows]) :-
 
 
 %% solve_puzzle(Puzzle, WordList, PuzzleWithVar)
+% PuzzleWithVar is Puzzle with all _ replaced logical variables. WordList is
+% is a list of words.
 % Solves the provided Puzzle by filling in all words into puzzle. It first
 % replaces all _ character with logical variables. It then splits on #
 % characters to get all the slots. It then tries to find and unify all the
@@ -141,6 +143,8 @@ solve_puzzle(Puzzle, Wordlist, PuzzleWithVar) :-
 
 
 %% solve_varpuzzle(Slots, Wordlist)
+% Slots are list of the slots for the puzzle and Wordlist is the list of
+% available words left.
 % Tries to find for a solution that fits all the words in Wordlist into all
 % the slots in Slots.
 % First finds for each slot, all the possible words, then it zip each slot
@@ -173,6 +177,8 @@ solve_varpuzzle(Slots, Wordlist) :-
 
 
 %% puzzle_to_slots(Puzzle, PuzzleWithVar)
+% Puzzle is the original puzzle read from file and PuzzleWithVar has all _
+% replaced with logical variables
 % As the puzzle is made out of lists of strings, and each string is a row for
 % the puzzle. For each row of the puzzle, we "replaces" all empty positions
 % '_' with a logical variable.
@@ -181,6 +187,8 @@ puzzle_to_vars(Puzzle, PuzzleWithVar) :-
 
 
 %% puzzle_to_slots(PuzzleWithVar, Slots)
+% PuzzleWithVar is the puzzle with logical variables and Slots are the slots
+% retreived from PuzzleWithVar
 % Convert the puzzle with all empty positions replaced with logical variables
 % to slots. Does this first by finding all the slots for all the rows,
 % then transpose the board, so columns becomes rows, and reapply same method.
@@ -193,6 +201,8 @@ puzzle_to_slots(PuzzleWithVar, Slots) :-
 
 
 %% rows_to_slots(Rows, Slots)
+% Rows are all of the rows for a puzzle, Slots are the slots retreived from
+% Rows
 % Converts each row to slots. For each row, find all the slots for that row,
 % and combine all the slots for all rows together
 rows_to_slots([], []).
@@ -206,6 +216,8 @@ rows_to_slots([Row|Rows], Slots) :-
 
 
 %% row_to_logical_var(Chars, NewRow)
+% Chars are a list of characters and NewRow is the same list of characters
+% with _ replaced with logical variable
 % For each character in the row (string), if the character is an _ then
 % replace it with a logical variable. Otherwise keep it as the same.
 row_to_logical_var([], []).
@@ -218,6 +230,7 @@ row_to_logical_var([Char|Chars], NewRow) :-
 
 
 %% get_slots_for_row(Row, Slots)
+% Row is a row of a puzzle and Slots are the slots retreived from that row
 % Find all the slots in Row. Do this by splitting on #. The Slots list
 % returned in first step is reversed, so we reverse the slots list and return
 % the correctly ordered list of Slots
@@ -230,6 +243,8 @@ get_slots_for_row(Row, Slots) :-
 
 
 %% get_slots_for_row(Row, Slot, Slots)
+% Row is a row of a puzzle, Slot is a new slot constructed from
+% reading the row, and Slots are the slots constructed so far from this row
 % Find all the slots for Row. Do this by first traversing the row, stop until
 % a character is found, append slot constructed so far to Slots, and
 % recursively apply the same strategy until there is no characters in the row
@@ -249,6 +264,9 @@ get_slots_for_row(Chars, SlotsAcc, Slots) :-
 
 
 %% get_slot(Chars, Slot, CharsLeft)
+% Chars are the characters of a row, and Slot is a new slot constructed so
+% far from the row, and CharsLeft is the characters left after trying to
+% construct a new slot
 % Return all characters from Chars from left to right until a # character is
 % found. The returned list of characters does not contain the # character.
 % If the character is not bound or if the character is bound but not bounded
@@ -268,6 +286,8 @@ get_slot([], [], []).
 
 
 %% append_slot(Slot, Slots, NewSlots)
+% Slot is a new Slot, Slots is slots found so far, and NewSlots is the result
+% of appending Slot to Slots
 % Only append Slot to Slots if the length of Slot is greater than 1. Doing
 % this because a Slot with 1 character or less is not a valid slot according
 % to project specification
@@ -278,6 +298,9 @@ append_slot(Slot, Slots, NewSlots) :-
     ).
 
 %% possible_words(Slots, Wordlist, PossibleWords)
+% Slots is all of the unbound slots for this puzzle, Wordlist is all of
+% the words that is not bounded to a slot and PossibleWords is a list
+% of list of words, each list of words correspond to a slot
 % For each slot, find the corresponding words in Wordlist that can be unified
 % with the slot.
 possible_words([], _, []).
@@ -292,6 +315,9 @@ unifiable(A, B) :- \+ (A \= B).
 
 
 %% find_min_slot(SlotSolutionPair, CurrentMinPair, MinPair)
+% SlotSolutionPair is all of the Slot Solution pair, CurrentMinPair is the
+% Slot with the smallest wordlist found so far, and MinPair is the slot
+% with smallest wordlist for all of the slots.
 % Finds the Slot-Solution pair which has the smallest number of words in its
 % Solution
 find_min_slot([], Min, Min).
@@ -319,6 +345,10 @@ find_min_slot([Slot-Solutions|Ss], MSlot-MSol, Min) :-
 
 
 %% try_solution(Slot, Solutions, Wordlist, NewWordlist)
+% Slot is a slot for a puzzle, Solutions are all the words that can be
+% unified with the slot, Wordlist is the words left that is not bounded to
+% a slot, and NewWordlist with a word deleted, where word is the word that
+% got bounded to the Slot.
 % For Slot, try all of its solutions. One of them must result in a solution
 % assuming valid wordlist and puzzle.
 
@@ -333,6 +363,7 @@ try_solution(Slot, [_|Solutions], Wordlist, NewWordlist) :-
 
 
 %% is_unified(Elements)
+% Elements is a slot of the puzzle
 % See if all of the elements is bound, i.e. it is not a variable
 is_unified([]).
 is_unified([Element|Elements]) :-
