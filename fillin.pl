@@ -132,7 +132,7 @@ valid_puzzle([Row|Rows]) :-
 %% solve_puzzle(Puzzle, WordList, PuzzleWithVar)
 % Solves the provided Puzzle by filling in all words into puzzle. It first
 % replaces all _ character with logical variables. It then splits on #
-% characters to get all the slots. It then tries to find a unify all the
+% characters to get all the slots. It then tries to find and unify all the
 % words in wordlist to the slots.
 solve_puzzle(Puzzle, Wordlist, PuzzleWithVar) :-
     puzzle_to_vars(Puzzle, PuzzleWithVar),
